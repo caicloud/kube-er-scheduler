@@ -1,0 +1,119 @@
+apiVersion: extensions/v1alpha1
+kind: ExtendedResource
+metadata:
+  name: er1
+  labels:
+    app: er1
+spec:
+  properties:
+    type: k80
+  rawResourceName: nvidia.com/gpu
+  deviceID: gpu1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values: 
+            - 127.0.0.1
+---
+apiVersion: extensions/v1alpha1
+kind: ExtendedResource
+metadata:
+  name: er2
+  labels:
+    app: er2
+spec:
+  properties:
+    type: k80
+  rawResourceName: nvidia.com/gpu
+  deviceID: gpu2
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values: 
+            - 127.0.0.1
+---
+apiVersion: extensions/v1alpha1
+kind: ExtendedResource
+metadata:
+  name: er3
+  labels:
+    app: er3
+spec:
+  properties:
+    type: k80
+  rawResourceName: nvidia.com/gpu
+  deviceID: gpu3
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values: 
+            - 127.0.0.1
+---
+apiVersion: extensions/v1alpha1
+kind: ExtendedResource
+metadata:
+  name: er4
+  labels:
+    app: er4
+spec:
+  properties:
+    type: k80
+  rawResourceName: nvidia.com/gpu
+  deviceID: gpu4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values: 
+            - 127.0.0.1
+---
+apiVersion: extensions/v1alpha1
+kind: ExtendedResource
+metadata:
+  name: er5
+  labels:
+    app: er5
+spec:
+  properties:
+    type: k80
+  rawResourceName: nvidia.com/gpu
+  deviceID: gpu5
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values: 
+            - 127.0.0.1
+---
+apiVersion: extensions/v1alpha1
+kind: ExtendedResource
+metadata:
+  name: er6
+  labels:
+    app: er6
+spec:
+  properties:
+    type: k80
+  rawResourceName: nvidia.com/gpu
+  deviceID: gpu6
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values: 
+            - 127.0.0.1

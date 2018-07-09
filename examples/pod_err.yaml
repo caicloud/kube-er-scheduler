@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: es1
+  namespace: default
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: n1
+      image: "nginx:latest"
+      ports:
+        - containerPort: 8094
+      extendedResourceClaims:
+      - "erc4"
+      

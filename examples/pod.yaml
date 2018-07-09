@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: es
+  namespace: default
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: n1
+      image: "nginx:latest"
+      ports:
+        - containerPort: 8090
+      extendedResourceClaims:
+      - "erc1"
+    - name: n2
+      image: "redis:latest"
+      ports:
+        - containerPort: 8091
+      extendedResourceClaims:
+      - "erc2"
+      

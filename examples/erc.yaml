@@ -1,0 +1,40 @@
+apiVersion: extensions/v1alpha1
+kind: ExtendedResourceClaim
+metadata:
+  name: erc1
+  namespace: default
+  labels:
+    app: erc1
+spec:
+  rawResourceName: nvidia.com-gpu
+  metadataRequirements:
+    matchExpressions:
+    - key: Type
+      operator: In
+      values: 
+        - k80
+  extendResourceNum: 1
+---
+apiVersion: extensions/v1alpha1
+kind: ExtendedResourceClaim
+metadata:
+  name: erc2
+  namespace: default
+  labels:
+    app: erc2
+spec:
+  rawResourceName: nvidia.com-gpu
+  extendedResourceNames:
+  - "nvidia.com-gpu-nvidia-test-111111111"
+---
+apiVersion: extensions/v1alpha1
+kind: ExtendedResourceClaim
+metadata:
+  name: erc4
+  namespace: default
+  labels:
+    app: erc4
+spec:
+  rawResourceName: nvidia.com-gpu
+  extendedResourceNames:
+  - "nvidia.com-gpu-nvidia-test-123456789"
