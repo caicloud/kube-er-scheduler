@@ -2,8 +2,6 @@ package main
 
 import (
 	"testing"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestUpdateNode(t *testing.T) {
@@ -16,7 +14,7 @@ func TestUpdateNode(t *testing.T) {
 	ers := &ExtendedResourceScheduler{
 		Clientset: clientset,
 	}
-	node, err := ers.findNode("127.0.0.1", metav1.GetOptions{})
+	node, err := ers.FindNode("127.0.0.1")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}

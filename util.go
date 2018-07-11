@@ -70,8 +70,8 @@ func (e *ExtendedResourceScheduler) UpdateExtendedResource(er *v1alpha1.Extended
 }
 
 // FindNode is get node
-func (e *ExtendedResourceScheduler) findNode(name string, options metav1.GetOptions) (*v1.Node, error) {
-	node, err := e.Clientset.CoreV1().Nodes().Get(name, options)
+func (e *ExtendedResourceScheduler) FindNode(name string) (*v1.Node, error) {
+	node, err := e.Clientset.CoreV1().Nodes().Get(name, metav1.GetOptions{})
 	if err != nil {
 		glog.Errorf("find node failed: %v", err)
 		return nil, err
@@ -87,6 +87,45 @@ func (e *ExtendedResourceScheduler) updateNodeStatus(node *v1.Node) error {
 		return err
 	}
 	return nil
+}
+
+// FindPod is get pod by name and namespace
+func (e *ExtendedResourceScheduler) FindPod(name, namespace string) (*v1.Pod, error) {
+	pod, err := e.Clientset.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return pod, nil
+}
+
+// Bind is assign pod to node
+func (e *ExtendedResourceScheduler) Bind(namespace string, b *v1.Binding) error {
+	err := e.Clientset.CoreV1().Pods(namespace).Bind(b)
+	if err != nil {
+		glog.Errorf("bind failed: %v", err)
+		return err
+	}
+	return nil
+}
+
+// FindExtendedResourceClaimList get a list of ExtendedResourceClaim by pod
+func (e *ExtendedResourceScheduler) FindExtendedResourceClaimList(pod v1.Pod) ([]*v1alpha1.ExtendedResourceClaim, error) {
+	extendedResourceClaimNames := make([]string, 0)
+	for _, container := range pod.Spec.Containers {
+		if len(container.ExtendedResourceClaims) != 0 {
+			extendedResourceClaimNames = append(extendedResourceClaimNames, container.ExtendedResourceClaims...)
+		}
+	}
+
+	extendedResourceClaims := make([]*v1alpha1.ExtendedResourceClaim, 0)
+	for _, ercName := range extendedResourceClaimNames {
+		erc, err := e.FindExtendedResourceClaim(pod.Namespace, ercName)
+		if err != nil {
+			return nil, err
+		}
+		extendedResourceClaims = append(extendedResourceClaims, erc)
+	}
+	return extendedResourceClaims, nil
 }
 
 // whether properties contain all labels, if contain all then return true, or return false

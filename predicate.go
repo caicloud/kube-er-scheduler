@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -71,7 +70,7 @@ func filter(extenderArgs schedulerapi.ExtenderArgs, extendedResourceScheduler *E
 		Error:       "",
 	}
 
-	extendedResourceClaims, err := findExtendedResourceClaims(pod, extendedResourceScheduler)
+	extendedResourceClaims, err := extendedResourceScheduler.FindExtendedResourceClaimList(pod)
 	if err != nil {
 		result.Error = err.Error()
 		return result
@@ -203,35 +202,12 @@ func filter(extenderArgs schedulerapi.ExtenderArgs, extendedResourceScheduler *E
 	// pod can be scheduled, so erc need to update, erc is pending
 	if len(canSchedule) > 0 {
 		for _, erc := range extendedResourceClaims {
-			erc.Status.Phase = v1alpha1.ExtendedResourceClaimBound
-			erc.Status.Reason = "ExtendedResourceClaim is already bound to ExtendedResource"
 			extendedResourceScheduler.UpdateExtendedResourceClaim(pod.Namespace, erc)
 		}
 	}
 	result.FailedNodes = canNotSchedule
 	result.Nodes.Items = canSchedule
 	return result
-}
-
-func findExtendedResourceClaims(pod v1.Pod, extendedResourceScheduler *ExtendedResourceScheduler) ([]*v1alpha1.ExtendedResourceClaim, error) {
-	extendedResourceClaimNames := make([]string, 0)
-	for _, container := range pod.Spec.Containers {
-		if len(container.ExtendedResourceClaims) != 0 {
-			extendedResourceClaimNames = append(extendedResourceClaimNames, container.ExtendedResourceClaims...)
-		}
-	}
-	if len(extendedResourceClaimNames) == 0 {
-		return nil, errors.New("extendedresourceclaims not set")
-	}
-	extendedResourceClaims := make([]*v1alpha1.ExtendedResourceClaim, 0)
-	for _, ercName := range extendedResourceClaimNames {
-		erc, err := extendedResourceScheduler.FindExtendedResourceClaim(pod.Namespace, ercName)
-		if err != nil {
-			return nil, err
-		}
-		extendedResourceClaims = append(extendedResourceClaims, erc)
-	}
-	return extendedResourceClaims, nil
 }
 
 // default set all node is fail

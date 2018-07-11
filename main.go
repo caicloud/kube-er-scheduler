@@ -47,6 +47,7 @@ func main() {
 
 	mux = make(map[string]func(http.ResponseWriter, *http.Request))
 	mux["/scheduler/predicates"] = Predicates(clientset)
+	mux["/scheduler/bind"] = Bind(clientset)
 
 	server := &http.Server{
 		Addr:         addr,
