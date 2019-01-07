@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-resource
+  namespace: default
+spec:
+  schedulerName: extended-resource-scheduler
+  selector:
+    matchLabels:
+      app: gpu
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gpu
+    spec:
+      containers:
+      - name: nginx
+        image: "nginx:1.14.2"
+        extendedResourceClaims:
+        - "k80-erc"

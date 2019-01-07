@@ -1,0 +1,13 @@
+apiVersion: extensions/v1alpha1
+kind: ExtendedResourceClaim
+metadata:
+  name: k80-erc
+  namespace: default
+  labels:
+    app: k80-erc
+spec:
+  rawResourceName: nvidia.com-gpu
+  metadataRequirements:
+    matchLabels:
+      type: k80
+  extendResourceNum: 1
