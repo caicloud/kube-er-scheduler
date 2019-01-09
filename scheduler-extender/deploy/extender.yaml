@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: extended-resource-scheduler-config
+  namespace: kube-system
+data:
+  config.yaml: |
+    apiVersion: componentconfig/v1alpha1
+    kind: KubeSchedulerConfiguration
+    schedulerName: extended-resource-scheduler
+    algorithmSource:
+      policy:
+        configMap:
+          namespace: kube-system
+          name: extended-resource-scheduler-policy
+    leaderElection:
+      leaderElect: true
+      lockObjectName: extended-resource-scheduler
+      lockObjectNamespace: kube-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: extended-resource-scheduler-policy
+  namespace: kube-system
+data:
+ policy.cfg : |
+  {
+    "kind" : "Policy",
+    "apiVersion" : "v1",
+    "extenders" : [{
+      "urlPrefix": "http://127.0.0.1:9098/api/v1/scheduler",
+      "filterVerb": "filter",
+      "bindVerb": "bind",
+      "prioritizeVerb": "",
+      "weight": 1,
+      "enableHttps": false,
+      "nodeCacheCapable": false,
+      "httpTimeout": 10000000000
+    }],
+    "hardPodAffinitySymmetricWeight" : 10
+  }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: extended-resource-scheduler
+  namespace: kube-system
+  labels:
+    app: extended-resource-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: extended-resource-scheduler
+  template:
+    metadata:
+      labels:
+        app: extended-resource-scheduler
+    spec:
+      volumes:
+      - name: extended-resource-scheduler-config
+        configMap:
+          name: extended-resource-scheduler-config
+      containers:
+      - name: default-scheduler-ctrl
+        image: gcr.io/google_containers/hyperkube:v1.11.1
+        imagePullPolicy: IfNotPresent
+        args:
+          - kube-scheduler
+          - --config=/scheduler/config.yaml
+          - --v=4
+        volumeMounts:
+        - name: extended-resource-scheduler-config
+          mountPath: /scheduler
+      - name: resource-scheduler-extender
+        image: scheduler-extender:v0.1.0
+        imagePullPolicy: IfNotPresent
+        command:
+          - /root/scheduler-extender
+          - --logtostderr=true
+          - --v=4
+        ports:
+          - containerPort: 9098
