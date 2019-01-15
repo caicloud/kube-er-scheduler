@@ -1,4 +1,4 @@
-package controller
+package extended_resource
 
 import (
 	"fmt"
