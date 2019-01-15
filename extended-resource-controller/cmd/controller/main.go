@@ -1,25 +1,34 @@
 package main
 
 import (
-	"flag"
+	goflag "flag"
+	"fmt"
 	"math/rand"
+	"os"
+	"strings"
 	"time"
 
-	"github.com/caicloud/kube-extended-resource/extended-resource-controller/pkg/controller"
-	"github.com/caicloud/kube-extended-resource/extended-resource-controller/pkg/util"
-	"github.com/golang/glog"
+	"github.com/spf13/pflag"
 )
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
+	goflag.Parse()
+	command := NewServerCommand()
 
-	flag.Parse()
+	// TODO: once we switch everything over to Cobra commands, we can go back to calling
+	// utilflag.InitFlags() (by removing its pflag.Parse() call). For now, we have to set the
+	// normalize func and add the go flag set by hand.
+	pflag.CommandLine.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+		if strings.Contains(name, "_") {
+			return pflag.NormalizedName(strings.Replace(name, "_", "-", -1))
+		}
+		return pflag.NormalizedName(name)
+	})
+	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
-	kubeClient := util.CreateClientset()
-
-	c := controller.NewExtendedResourceController(kubeClient)
-
-	glog.V(2).Infof("Extended Resource ExtendedResourceController Run.")
-
-	c.Run()
+	if err := command.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
 }

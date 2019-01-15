@@ -23,6 +23,7 @@ rules:
       - extendedresourceclaims
       - extendedresources
       - pods
+      - nodes
     verbs:
       - watch
       - list

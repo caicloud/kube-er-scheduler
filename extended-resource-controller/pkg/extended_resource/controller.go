@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/caicloud/kube-extended-resource/extended-resource-controller/pkg/util"
 	"github.com/golang/glog"
 	"k8s.io/api/extensions/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -26,7 +27,6 @@ const (
 
 // ExtendedResourceController defines how to unbind the erc and er.
 type ExtendedResourceController struct {
-	stopCh <-chan struct{}
 	client clientset.Interface
 
 	ercLister extensions_lister.ExtendedResourceClaimLister
@@ -49,12 +49,11 @@ func NewExtendedResourceController(kubeClient clientset.Interface) *ExtendedReso
 
 	c := &ExtendedResourceController{
 		client:        kubeClient,
-		stopCh:        make(<-chan struct{}),
 		claimQueue:    claimQueue,
 		resourceQueue: resourceQueue,
 	}
 
-	go informerFactory.Start(c.stopCh)
+	go informerFactory.Start(wait.NeverStop)
 
 	ercInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -87,7 +86,7 @@ func NewExtendedResourceController(kubeClient clientset.Interface) *ExtendedReso
 	return c
 }
 
-func (c *ExtendedResourceController) Run() {
+func (c *ExtendedResourceController) Run(stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 	defer c.claimQueue.ShutDown()
 	defer c.resourceQueue.ShutDown()
@@ -95,13 +94,13 @@ func (c *ExtendedResourceController) Run() {
 	glog.Infof("Starting extended resource controller")
 	defer glog.Infof("Shutting down extended resource controller")
 
-	if !WaitForCacheSync("extended-resource", c.stopCh, c.ercInformerSynced, c.erInformerSynced) {
+	if !util.WaitForCacheSync("extended-resource", stopCh, c.ercInformerSynced, c.erInformerSynced) {
 		return
 	}
 
-	go wait.Until(c.syncClaim, time.Second, c.stopCh)
-	go wait.Until(c.syncResource, time.Second, c.stopCh)
-	<-c.stopCh
+	go wait.Until(c.syncClaim, time.Second, stopCh)
+	go wait.Until(c.syncResource, time.Second, stopCh)
+	<-stopCh
 }
 
 func (c *ExtendedResourceController) syncClaim() {
@@ -310,16 +309,4 @@ func (c *ExtendedResourceController) enqueueWork(queue workqueue.Interface, obj 
 	}
 	glog.V(5).Infof("enqueued %q for sync", objName)
 	queue.Add(objName)
-}
-
-func WaitForCacheSync(controllerName string, stopCh <-chan struct{}, cacheSyncs ...cache.InformerSynced) bool {
-	glog.Infof("Waiting for caches to sync for %s controller", controllerName)
-
-	if !cache.WaitForCacheSync(stopCh, cacheSyncs...) {
-		utilruntime.HandleError(fmt.Errorf("unable to sync caches for %s controller", controllerName))
-		return false
-	}
-
-	glog.Infof("Caches are synced for %s controller", controllerName)
-	return true
 }

@@ -6,11 +6,31 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"time"
 
 	"github.com/golang/glog"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+)
+
+const (
+	// DefaultInformerResyncPeriod is the resync period of informer
+	DefaultInformerResyncPeriod = 5 * time.Second
+
+	// DefaultMonitorResyncPeriod is the resync period
+	DefaultResyncPeriod = 30 * time.Second
+
+	// UpdateERRetryCount is the retry count of ER updating
+	UpdateERRetryCount = 5
+
+	// UpdateERInterval is the interval of ER updating
+	UpdateERInterval = 5 * time.Millisecond
+
+	// DefaultNodeNotReadyTimeDuration is the default time interval we need to consider node broken if it keeps NotReady
+	DefaultNodeNotReadyTimeDuration = 120 * time.Second
 )
 
 var (
@@ -54,4 +74,16 @@ func CreateClientset() kubernetes.Interface {
 		return nil
 	}
 	return kubernetes.NewForConfigOrDie(c)
+}
+
+func WaitForCacheSync(controllerName string, stopCh <-chan struct{}, cacheSyncs ...cache.InformerSynced) bool {
+	glog.Infof("Waiting for caches to sync for %s controller", controllerName)
+
+	if !cache.WaitForCacheSync(stopCh, cacheSyncs...) {
+		utilruntime.HandleError(fmt.Errorf("unable to sync caches for %s controller", controllerName))
+		return false
+	}
+
+	glog.Infof("Caches are synced for %s controller", controllerName)
+	return true
 }
